@@ -15,7 +15,9 @@ pipeline {
                 sh '/opt/maven/bin/mvn -P metrics pmd:pmd'
             }
             post {
-                recordIssues sourceCodeRetention: 'LAST_BUILD', tools: [pmdParser(pattern: '**/pmd.xml')]
+                success {
+                  recordIssues sourceCodeRetention: 'LAST_BUILD', tools: [pmdParser(pattern: '**/pmd.xml')]
+                }
             }
         }
         stage('code-test') {
@@ -24,18 +26,22 @@ pipeline {
                 sh '/opt/maven/bin/mvn test'
             }
             post {
-                junit 'target/surefire-reports/*.xml'
+                success {
+                    junit 'target/surefire-reports/*.xml'
+                }
             }
-        }
+        }    
         stage('code-coverage') {
             steps {
                 echo 'Hii! I am your first step in the pipeline.'
                 sh '''/opt/maven/bin/mvn verify'''
             }
             post {
-                jacoco changeBuildStatus: true, runAlways: true, skipCopyOfSrcFiles: true
+                success {
+                    jacoco changeBuildStatus: true, runAlways: true, skipCopyOfSrcFiles: true
+                }   
             }
-        }
+        }    
         stage('code-package') {
             steps {
                 echo 'Hii! I am your first step in the pipeline.'
