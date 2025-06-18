@@ -1,0 +1,18 @@
+- name: Copy file from control server to remote server
+  hosts: qa
+  vars_files: 
+    - vault.yml
+  become: yes
+  tasks:
+
+    - name: ping the servers
+      ping:
+    - name: copy file from src to remote
+      copy:
+        src: /new/file.txt
+        dest: /new/
+        mode: 0744
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted

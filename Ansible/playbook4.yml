@@ -1,0 +1,14 @@
+- name: create a user and password
+  become: yes
+  vars_files:
+    - vault.yml
+  hosts: qa
+  tasks:
+
+    - name: creating a user
+      user:
+        name: deployuser
+        password: $5$tMzXHuF8tlL8zWD0$pQqCF3WN4OZ/y884MIfZVsWwmgksG3hUpBagAF18kO9
+        groups: sudo
+        append: yes
+

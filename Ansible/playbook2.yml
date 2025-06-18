@@ -1,0 +1,19 @@
+- name: Install nginx and Start the service
+  hosts: qa
+  vars_files:
+    - vault.yml
+  become: yes
+  tasks:
+
+    - name: update
+      apt:
+        update_cache: yes
+    - name: install nginx
+      apt:
+        name: nginx
+        state: absent
+    - name: start service
+      service:
+        name: nginx
+        state: started      
+

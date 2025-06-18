@@ -1,0 +1,34 @@
+- name: installing multiple packages using loop
+  hosts: qa
+  become: yes
+  vars_files:
+    - vault.yml
+  tasks:
+    - name: install packages
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - git
+        - wget
+        - curl
+
+
+  #- name: installing multiple packages using loop
+  # hosts: qa
+    # become: yes
+    #vars_files:
+    #- vault.yml
+      #vars:
+    #my_packages:
+      # - git
+        # - wget
+        # - curl
+        #tasks:
+    #- name: install packages
+      #package:
+        #name: "{{ item }}"
+          #state: present
+          #loop: "{{ my_packages }}"
+
+
