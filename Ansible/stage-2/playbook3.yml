@@ -1,0 +1,18 @@
+- name: creating a tar file and making it un tar
+  hosts: qa
+  become: yes
+  vars_files: 
+    - vault.yml
+  tasks:
+    - name: downloading tar file
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.42/bin/apache-tomcat-10.1.42.tar.gz
+        dest: /opt/apache-tomcat.tar.gz
+      when: ansible_distribution=="Ubuntu"
+    - name: un tar it
+      unarchive:
+        src: /opt/apache-tomcat.tar.gz
+        dest: /opt/tomcat/
+        remote_src: yes
+      when: ansible_distribution=="CentOS"    
+

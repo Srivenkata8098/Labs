@@ -1,0 +1,48 @@
+- name: creating a group, users and add ssh keys in authorized_keys and giving sudo privilege to the users
+  hosts: qa
+  vars_files:
+    - vault.yml
+  become: yes
+  vars:
+    test_users:
+      - name: alice
+        ssh_key: /root/user_keys/alice.pub
+      - name: bob
+        ssh_key: /root/user_keys/bob.pub
+      - name: carol
+        ssh_key: /root/user_keys/carol.pub
+  tasks:
+    - name: creating test group
+      group:
+        name: test
+        state: present
+    - name: creating users and add test group
+      user:
+        name: "{{ item.name }}"
+        state: present
+        group: test
+        shell: /bin/bash    ### when usr login's it will be added in /bin/bash
+        create_home: yes
+      loop: "{{ test_users }}"
+    - name: adding the key to the authorized_key
+      authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ lookup('file', item.ssh_key) }}"
+      loop: "{{ test_users }}"
+    - name: install packages
+      package:
+        name:
+          - wget
+          - vim
+          - curl
+          - git
+        state: present
+    - name: gives the user to the sudo privilges
+      copy:
+        dest: /etc/sudoers.d/test
+        content: "%test ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+
+

@@ -1,0 +1,29 @@
+- name: Using vars promot module 
+  hosts: qa
+  become: yes
+  vars_files:
+    - vault.yml
+  vars_prompt:
+    - name: username
+      prompt: Please enter the username
+      private: no
+
+    - name: password
+      prompt: Please enter the password of the user
+      private: no
+  tasks:
+    - name: create a file in the above user
+      file:
+        path: /sri/{{ username }}/files
+        group: "{{ username }}"
+        owner: "{{ username }}"
+        mode: '0644'
+        state: directory
+    - name: create a file 
+      file:
+        path: /sri/{{ username }}/files/file.txt
+        group: "{{ username }}"
+        owner: "{{ username }}"
+        mode: '0744'
+        state: touch    
+    
