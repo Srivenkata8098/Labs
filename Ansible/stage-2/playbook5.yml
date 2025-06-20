@@ -1,0 +1,49 @@
+- name: all the tasks in a single playbook
+  hosts: qa
+  vars_files:
+    - vault.yml
+  become: yes
+  vars:
+    document_root: /var/www/html
+  tasks:
+    - name: adding a new user 
+      user:
+        name: admin
+        shell: /bin/bash
+        create_home: yes
+        state: present
+    - name: authorized_key adding
+      authorized_key:
+        user: admin
+        key: "{{ lookup('file', '/root/user_keys/admin.pub') }}"
+    - name: Creating a files and assigning the owner to admin
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: admin
+        mode: '0755'
+      loop:
+        - /opt/app/config
+        - /opt/app/logs
+    - name: install web server and ensure it is running
+      apt:
+        name: nginx
+        state: present
+      when: ansible_distribution=="Ubuntu"
+    - name: restart the service
+      service:
+        name: nginx
+        state: started
+    - name: copy a index file from source server to remote server
+      copy:
+        src: /etc/ansible/index.html
+        dest: /var/www/html/index.html
+    - name: changing the hostname
+      hostname:
+        name: "remote-server-{{ ansible_play_hosts.index(inventory_hostname) + 1 }}"
+    - name: creating a template and using the template to deploy nginx config
+      template:
+        src: /etc/ansible/nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+
+      
