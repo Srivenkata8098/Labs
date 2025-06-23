@@ -1,0 +1,11 @@
+- name: Configure Web and DB servers with vaults
+  hosts: all
+  become: yes
+  vars_files:
+    - vault.yml
+    - sql_vault.yml
+  roles:
+    - web
+    - db
+    - disk
+

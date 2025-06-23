@@ -1,0 +1,10 @@
+- name: install web app nginx
+  apt:
+    name: nginx
+    state: present
+- name: use template to change config file
+  template:
+    src: nginx.html.j2
+    dest: /etc/nginx/sites-available/default
+  notify: restart nginx
+

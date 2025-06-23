@@ -1,0 +1,10 @@
+- name: check disk usage
+  shell: df -h / | awk 'NR==2{print $5}' | sed 's/%//'
+  register: disk_use
+- name: send mail
+  mail:
+    host: localhost
+    subject: "Disk Alert on host {{ inventory_hostname }}"
+    to: srivenkata.atti@gmail.com
+    body: " Disk usage on host {{ inventory_hostname }} is > 80%"
+  when: disk_use.stdout | int > 80
