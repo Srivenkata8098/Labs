@@ -1,0 +1,22 @@
+- name: install sql
+  apt:
+    name: mysql-server
+    state: present
+- name: Install PyMySQL library
+  apt:
+    name: python3-pymysql
+    state: present
+- name: set root password
+  mysql_user:
+    login_user: root
+      #login_password: "{{ sql_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    password: "{{ sql_password }}"
+    host: "%"
+    state: present
+
+
+
+
+
