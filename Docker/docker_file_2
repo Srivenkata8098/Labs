@@ -1,0 +1,6 @@
+FROM alpine
+
+RUN apk add --no-cache curl
+
+CMD ["curl", "https://ifconfig.me"]
+

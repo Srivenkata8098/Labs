@@ -1,0 +1,6 @@
+FROM alpine
+
+RUN apk add --no-cache openjdk17 bash
+
+CMD ["bash", "-c", "java --version"]
+
