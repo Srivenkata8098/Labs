@@ -1,0 +1,18 @@
+FROM alpine
+
+ENV USERNAME=appuser
+
+RUN adduser -D -s /sbin/nologin -h /home/appuser appuser 
+
+USER appuser
+
+WORKDIR /app
+
+COPY --chown=appuser:appuser ./checking.sh /app/checking.sh
+
+RUN chmod +x /app/checking.sh
+
+ENTRYPOINT ["/bin/sh", "-c"]
+
+CMD ["/app/checking.sh && tail -f /dev/null"]
+

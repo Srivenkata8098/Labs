@@ -1,0 +1,29 @@
+FROM alpine
+
+RUN adduser -D -s /sbin/nologin appuser
+
+ARG URL
+
+ENV URLs=${URL}
+
+RUN echo $URL
+
+RUN apk update && apk add --no-cache openjdk17 wget curl tar && mkdir -p /opt/tomcat
+
+RUN wget https://dlcdn.apache.org/tomcat/tomcat-11/v11.0.8/bin/apache-tomcat-11.0.8.tar.gz && \
+    tar -vxzf apache-tomcat-11.0.8.tar.gz && \
+    mv apache-tomcat-11.0.8 /opt/tomcat && \
+    rm apache-tomcat-11.0.8.tar.gz
+
+RUN sh -c "wget -P /opt/tomcat/apache-tomcat-11.0.8/webapps/ ${URL}" && \
+    chown -R appuser:appuser /opt/tomcat                                                 #Giving permissions, as user doesn't have root access
+
+WORKDIR /opt/tomcat
+
+USER appuser
+
+EXPOSE 8080
+
+CMD ["./apache-tomcat-11.0.8/bin/catalina.sh", "run"]
+
+

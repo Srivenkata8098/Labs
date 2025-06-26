@@ -1,0 +1,1 @@
+*/2 * * * * /app/weather.sh >> /app/weather_report.log

@@ -1,0 +1,7 @@
+FROM alpine
+
+ARG Username
+
+ENV USERNAME=${Username}
+
+CMD ["sh", "-c", "echo Hello $USERNAME"]
