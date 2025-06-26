@@ -1,0 +1,10 @@
+FROM alpine 
+
+RUN apk add --no-cache bash
+
+ENV APPNAME=SOA
+ENV APPVERSION=1.0.0
+
+COPY appname.sh .
+
+CMD ["bash", "appname.sh"]

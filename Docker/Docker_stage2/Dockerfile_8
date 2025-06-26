@@ -1,0 +1,11 @@
+FROM alpine 
+
+RUN apk add jq curl bash 
+
+WORKDIR /app
+
+COPY weather.sh .
+
+RUN chmod +x /app/weather.sh
+
+CMD ["bash", "/app/weather.sh"]

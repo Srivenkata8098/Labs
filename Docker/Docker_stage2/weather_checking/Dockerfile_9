@@ -1,0 +1,21 @@
+FROM alpine
+
+RUN apk add --no-cache jq curl
+
+RUN adduser -D -s /bin/sh appuser
+
+WORKDIR /app
+
+COPY weather.sh .
+
+COPY cronjob /etc/crontabs/root
+
+RUN chmod +x weather.sh && \
+    touch weather_report.log && \
+    chown appuser:appuser /app/weather_report.log
+
+HEALTHCHECK --interval=3s --start-period=3s --retries=3 CMD curl -sf http://google.com || exit 1
+
+USER appuser
+
+CMD ["crond", "-f", "-L", "/app/weather_report.log"]

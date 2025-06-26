@@ -1,0 +1,11 @@
+FROM alpine
+
+RUN apk add --no-cache bash 
+
+RUN adduser -D appuser
+
+USER appuser
+
+CMD ["whoami"]
+
+#CMD ["bash", "-c", "whoami"]
