@@ -1,0 +1,19 @@
+
+services:
+  myapp:
+    image: nginx
+    deploy:
+      replicas: 3
+    volumes:
+      - myapp:/usr/share/nginx/html
+      - mylogs:/var/log/nginx
+    network_mode: host
+    restart: unless-stopped
+      #ports: ports are not allowed in host mode
+      #"80":"80"
+      #we have to use vm's IP and image default port to access the container of host network
+
+volumes:
+  myapp: {}
+  mylogs: {}
+

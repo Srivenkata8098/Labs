@@ -1,0 +1,17 @@
+services:
+  myapp:
+    deploy:
+      replicas: 3
+    volumes:
+      #src:target
+      - applog:/opt/tomcat/logs
+    networks:
+      - mynet
+    image: tomcat:v2
+    ports:
+      - 8080
+
+volumes:
+  applog: {}
+networks:
+  mynet: {}
