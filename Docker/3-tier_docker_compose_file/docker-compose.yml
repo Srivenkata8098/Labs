@@ -1,0 +1,70 @@
+version: '3.8'  # Docker Compose file format version
+
+services:
+  web:
+    image: nginx:latest           # Pull image from Docker Hub
+    container_name: webserver     # Set custom container name
+    restart: always               # Restart policy
+    ports:
+      - "80:80"                   # Map host port 80 to container port 80
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    volumes:
+      - webdata:/usr/share/nginx/html  # Named volume
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Bind mount
+    networks:
+      - frontend
+    depends_on:
+      - app                       # Wait for 'app' container
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    build:
+      context: ./app              # Path to Dockerfile
+      dockerfile: Dockerfile      # Optional if file is named differently
+    container_name: myapp
+    command: ["python", "app.py"] # Override default CMD
+    working_dir: /app             # Working directory inside container
+    environment:
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    networks:
+      - frontend
+      - backend
+    volumes:
+      - ./app:/app
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: mysql:8.0
+    container_name: mysqldb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpass
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - backend
+    ports:
+      - "3306:3306"
+
+volumes:
+  webdata: {}     # Named volume
+  dbdata: {}      # Named volume
+
+networks:
+  frontend: {}    # Custom bridge networks
+  backend: {}
+
