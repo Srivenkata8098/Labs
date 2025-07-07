@@ -1,0 +1,157 @@
+- name: installing docker, kubernetes and its dependencies
+  hosts: all
+  become: yes
+  vars_files:
+    - vault_new.yml
+  vars:
+    urls:
+      - name: installDocker.sh
+        url: https://raw.githubusercontent.com/lerndevops/labs/master/scripts/installDocker.sh
+      - name: installCRIDockerd.sh
+        url: https://raw.githubusercontent.com/lerndevops/labs/master/scripts/installCRIDockerd.sh
+      - name: installK8S.sh
+        url: https://raw.githubusercontent.com/lerndevops/labs/master/scripts/installK8S.sh
+    services:
+      - docker
+      - cri-docker
+  tasks:
+
+    #------------------------
+    #Install scripts on nodes
+    #------------------------
+    - name: Install the scripts
+      get_url:
+        url: "{{ item.url }}"
+        dest: "/tmp/{{ item.name }}"
+        mode: '0755'
+      loop: "{{ urls }}"
+
+    # ------------------------
+    # Docker Installation
+    # ------------------------
+
+    - name: checking the versions
+      command: docker -v
+      register: docker_version
+      ignore_errors: yes
+
+    - name: Install docker if not installed
+      shell: "/tmp/installDocker.sh"
+      when: docker_version.rc != 0
+
+    # ------------------------
+    # Docker CRI Installation
+    # ------------------------
+    - name: checking the versions
+      command: cri-dockerd --version
+      register: cri_version
+      ignore_errors: yes
+
+    - name: Install docker if not installed
+      shell: "/tmp/installCRIDockerd.sh"
+      when: cri_version.rc != 0
+
+    # ------------------------
+    # K8 Installation
+    # ------------------------
+    - name: checking the versions
+      command: kubeadm version -o short
+      register: kubeadm_version
+      ignore_errors: yes
+
+    - name: Install docker if not installed
+      shell: "/tmp/installK8S.sh"
+      when: kubeadm_version.rc != 0
+
+    # ------------------------
+    # Restart Docker-related services
+    # ------------------------
+    - name: restart the services
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop: "{{ services }}"
+
+    # ------------------------
+    # Show versions of installed tools
+    # ------------------------
+    - name: Get kubelet version
+      command: kubelet --version
+      register: kubelet_version
+      ignore_errors: yes
+
+    - name: Get kubectl version
+      command: kubectl version --client
+      register: kubectl_version
+      ignore_errors: yes
+
+    - debug:
+        msg:
+          - "docker version: {{ docker_version.stdout }}"
+          - "cri version: {{ cri_version.stdout }}"
+          - "kubeadm_version: {{ kubeadm_version.stdout }}"
+          - "kubelet version: {{ kubelet_version.stdout | default('Not Installed') }}"
+          - "kubectl version: {{ kubectl_version.stdout | default('Not Installed') }}"
+
+    # ---------------------------------------
+    # Initialize master (if not already done)
+    # ---------------------------------------
+    - name: run the shell command and store the output
+      shell: sudo kubeadm init --cri-socket unix:///var/run/cri-dockerd.sock --ignore-preflight-errors=all >> /root/kubeadm_join.output
+      args:
+        creates: /etc/kubernetes/admin.conf   ### This will the task idempotent means not run multiple time if file is exists.
+      register: kubeadm_output
+      when: "'master' in group_names"
+    - name: copy join output to text file
+      copy:
+        src: /root/kubeadm_join.output
+        dest: /root/kubeadm_join.txt
+        remote_src: yes
+      when: "'master' in group_names"
+    - name: create a directory
+      file:
+        path: /root/.kube
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      when: "'master' in group_names"
+    - name: copy the the content as mentioned
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        remote_src: yes
+      when: "'master' in group_names and kubeadm_output is defined and kubeadm_output.rc == 0"
+
+    - name: Check calico installation
+      shell: kubectl get pods -n kube-system -l k8s-app=calico-kube-controllers
+      changed_when: false
+      failed_when: false
+      register: calico_check
+      when: "'master' in group_names"
+
+    - name: Debug Calico pod count
+      debug:
+        msg: "Calico pods found: {{ calico_check.stdout }}"
+      when: "'master' in group_names"
+
+    # ------------------------
+    # Apply Calico CNI Plugin
+    # ------------------------
+    - name: To install the network drive which is calico
+      shell: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/calico.yaml
+      register: calico_output
+      retries: 5
+      delay: 15
+      until: calico_output.rc == 0
+      when: "'master' in group_names and (calico_check.stdout | int == 0)"
+    #-----------------------------------
+    #Install Requirments on worker nodes
+    #-----------------------------------
+    - name: install below commands on worker nodes
+      shell: |
+        sudo modprobe br_netfilter
+        sudo echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
+        sudo echo 1 > /proc/sys/net/ipv4/ip_forward
+      when: "'worker' in group_names"
+
