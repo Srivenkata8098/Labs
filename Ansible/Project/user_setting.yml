@@ -1,0 +1,38 @@
+- name: creating user and giving required previlages
+  hosts: nodes
+  become: yes
+  tasks:
+    - name: creating a user
+      user:
+        name: devops
+        password: "$6$tZDznvPRGy3d8UDf$6Z2zFjHpb./Ra1zCOOOuafjjuFeQQz1OMH6EGmlFdb0r8UpvbUazLnQ829hL92hIAFXWvlujXYKIhFS1w2TR3."
+        group: sudo
+        shell: /bin/bash
+        create_home: yes
+        append: yes
+    - name: password authentication
+      replace:
+        path: /etc/ssh/sshd_config.d/60-cloudimg-settings.conf
+        regexp: '^#?PasswordAuthentication\s+no'
+        replace: 'PasswordAuthentication yes'
+    - name: adding user for sudo access.
+      lineinfile:
+        path: /etc/sudoers
+        line: '%devops ALL=(ALL:ALL) ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+    - name: user can be root without password
+      lineinfile:
+        path: /etc/sudoers.d/90-cloud-init-users
+        line: 'devops ALL=(ALL) NOPASSWD:ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+    - name: Restart ssh
+      service:
+        name: ssh
+        state: restarted
+
+
+
+
+##Note: Password has to hased to work above script
+#python3 -c 'import crypt; print(crypt.crypt("devops@123", crypt.mksalt(crypt.METHOD_SHA512)))'
+#Replace devops@123 with your password.

@@ -1,0 +1,2 @@
+ansible_user: devops
+ansible_ssh_pass: devops@123
