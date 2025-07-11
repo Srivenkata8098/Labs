@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dynamic-volume-pod
+  namespace: test-space
+  labels:
+    pod: tomy
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      ports:
+        - containerPort: 8080
+      volumeMounts:
+         - name: config-volume
+           mountPath: /etc/nginx/nginx.conf
+           subPath: nginx.conf
+  volumes:
+    - name: config-volume
+      configMap:
+        name: config-v 
+

@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-space
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: test-space
+  labels:
+    pod: nginx
+  name: test-pod
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: test-space
+  labels:
+    pod: tomy
+  name: deploy-pods-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      pod: tomy
+  template:
+    metadata:
+      labels:
+        pod: tomy
+    spec:
+      containers:
+        - name: tomy
+          image: tomcat
+          env:
+            - name: app-name
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: APP_NAME
+            - name: version
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: APP_VERSION
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test-space
+  name: svc-tomy-cluster
+spec:
+  type: ClusterIP
+  selector:
+    pod: tomy
+  ports:
+    - name: tomy
+      port: 2000
+      targetPort: 8080
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test-space
+  name: test-service-node
+spec:
+  type: NodePort
+  selector:
+    pod: nginx
+  ports:
+    - name: nginx
+      port: 3000
+      targetPort: 80
+      nodePort: 32467
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test-space
+  name: svc-nginx-cluster
+spec:
+  type: ClusterIP
+  selector:
+    pod: nginx
+  ports:
+    - name: nginx
+      port: 3000
+      targetPort: 80
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test-space
+  name: svc-node-tomy
+spec:
+  type: NodePort
+  selector:
+    pod: tomy
+  ports:
+    - name: tomy-svc
+      port: 2000
+      targetPort: 8080
+      nodePort: 32468
