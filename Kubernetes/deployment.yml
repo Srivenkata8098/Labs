@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: dev-space
+  name: my-deploy
+  labels:
+    myapp: app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      myapp: app
+  template:
+    metadata:
+      labels:
+        myapp: app
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dev-space
+  labels:
+    myservice: service
+  name: nodeport
+spec:
+  type: NodePort
+  selector:
+    myapp: app
+  ports:
+    - name: service3
+      port: 4000
+      targetPort: 80
+      nodePort: 32417
