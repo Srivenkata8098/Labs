@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-emptydir
+  namespace: practice-space 
+  labels:
+    pod: mypod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      pod: mypod
+  template:
+    metadata:
+      labels:
+        pod: mypod
+    spec:
+      containers:
+        - name: tomy
+          image: tomcat
+          volumeMounts:
+            - name: emptyvolume
+              mountPath: /data
+      volumes:
+        - name: emptyvolume
+          emptyDir: {}
