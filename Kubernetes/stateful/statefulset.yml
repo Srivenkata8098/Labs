@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: devops-space
+  name: stateful
+  labels:
+    pod: mypod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      pod: mypod
+  serviceName: headless
+  template:
+    metadata:
+      labels:
+        pod: mypod
+    spec:
+      containers:
+        - name: mycont
+          image: nginx
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          hostPath:
+            path: /data
+            type: DirectoryOrCreate
+
