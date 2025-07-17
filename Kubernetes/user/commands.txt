@@ -1,0 +1,41 @@
+openssl genrsa -out emp.key 2048  #to create a private key
+
+openssl req -new -key emp.key -out emp.csr -subj "/CN=emp/O=dev"  ## to create a CSR
+
+cat emp.csr | base64 | tr -d '\n' >csr.txt ## to encode the csr file and paste that output in the emp-scr.yml file
+
+kubectl apply -f emp-csr.yaml ## Submit CSR to kubernetes
+
+kubectl certificate approve emp-csr  ## approve the emp-CSR
+
+kubectl get csr emp-csr -o jsonpath='{.status.certificate}' | base64 -d > emp.crt ## extract the signed certificate
+
+kubectl config set-credentials emp \
+  --client-certificate=emp.crt \
+  --client-key=emp.key \
+  --embed-certs=true
+
+kubectl config set-context dev-ctx \
+  --cluster=minikube \
+  --namespace=dev \
+  --user=emp
+
+kubectl config use-context dev-ctx
+  
+
+## above three will configure the user in kubeconfig
+
+kubectl config set-credentials emp \
+  --client-certificate=emp.crt \
+  --client-key=emp.key \
+  --embed-certs=true
+
+kubectl config set-context dev-ctx \
+  --cluster=minikube \
+  --namespace=dev \
+  --user=emp
+
+kubectl config use-context dev-ctx
+ ##above will give the access to the user
+
+
