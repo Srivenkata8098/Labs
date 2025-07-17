@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nodeaffinity-test
+  namespace: dev-space
+  labels:
+    pod: mypod
+spec:
+  selector:
+    matchLabels:
+      pod: mypod
+  replicas: 4
+  serviceName: svc-test
+  template:
+    metadata:
+      labels:
+        pod: mypod
+    spec:
+      containers:
+        - name: apache
+          image: httpd
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: myvolume
+              mountPath: /data/state
+      volumes:
+        - name: myvolume
+          hostPath:
+            path: /data/state
+            type: DirectoryOrCreate
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+                 - key: type
+                   operator: In
+                   values:
+                    - docker-desktop
+            - matchExpressions:
+                - key: type
+                  operator: In
+                  values:
+                    - dda
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: type
+                    operator: Exists
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: type
+                    operator: In
+                    values:
+                      - docker
+                     

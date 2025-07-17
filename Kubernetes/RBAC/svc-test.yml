@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-test
+  namespace: dev-space
+spec:
+  clusterIP: None
+  selector:
+    pod: mypod
+  ports:
+    - name: cont1
+      port: 80
+      targetPort: 80
