@@ -1,0 +1,56 @@
+- name: jenkins installation
+  hosts: all
+  become: yes
+  vars_files:
+    - jenkins.yml
+  tasks:
+    - name: update cache
+      apt:
+        update_cache: yes
+    - name: install java on jenkins
+      package:
+        name: openjdk-17-jdk
+        state: present
+    - name: check git version
+      command: git --version
+      register: git_version
+      ignore_errors: yes
+    - name: install git if not installed
+      package:
+        name: git
+        state: present
+      when: git_version.rc != 0
+    - name: Install maven
+      package:
+        name: maven
+        state: present
+    - name: copy jenkins installation file to remote servers
+      copy:
+        src: /root/install_jenkins.sh
+        dest: /root
+        mode: "0755"
+      when: "'master' in group_names"
+
+    - name: Install Jenkins
+      shell: /root/install_jenkins.sh
+      when: "'master' in group_names" 
+- name: Install Docker
+  hosts: all
+  become: yes
+  vars_files:
+    - jenkins.yml 
+  serial: 1
+  tasks:
+    - name: Ask the user if they want to install Docker on all nodes
+      pause:
+        prompt: Do you want to install Docker(yes/no)?
+      register: docker_ans
+    - name: Set install on flag based
+      set_fact:
+        install_docker: "{{ docker_ans.user_input | trim | lower == 'yes' }}"
+    - name: Install docker
+      apt:
+        name: docker.io
+        state: present
+      when: install_docker
+
