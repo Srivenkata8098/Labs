@@ -53,4 +53,15 @@
         name: docker.io
         state: present
       when: install_docker
-
+    - name: Give the permissions to the docker to execute commands from devops user
+      user:
+        name: devops
+        groups: docker
+        append: yes
+      when: "'agents' in group_names"
+    - name: Give permissions to the docker to execute docker commands for jenkins master
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+      when: "'master' in group_names"
